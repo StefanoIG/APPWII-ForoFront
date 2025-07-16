@@ -29,7 +29,7 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({ votableType, votableId
       // El interceptor de axios ya maneja los errores 422
       // Aquí solo manejamos otros tipos de errores si es necesario
       if (error.response?.status !== 422) {
-        showError('Error al procesar el voto. Inténtalo de nuevo.');
+        showError('No puedes votar por tu propia publicación.');
       }
     }
   };
