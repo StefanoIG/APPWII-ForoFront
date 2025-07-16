@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 
+// Contextos
+import { ToastProvider } from './contexts/ToastContext';
+
 // Páginas
 import HomePage from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
@@ -17,7 +20,8 @@ import { ProtectedRoute } from './components/common/ProtectedRoute';
 
 function App() {
   return (
-    <Router>
+    <ToastProvider>
+      <Router>
       <Routes>
         {/* Rutas públicas */}
         <Route path="/" element={<HomePage />} />
@@ -37,6 +41,7 @@ function App() {
         <Route path="/admin/*" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
       </Routes>
     </Router>
+    </ToastProvider>
   );
 }
 

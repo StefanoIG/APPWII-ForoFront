@@ -31,6 +31,17 @@ apiClient.interceptors.response.use(
   (error) => {
     console.log('Error de API:', error.response?.status, error.response?.data);
     
+    // Manejar errores 422 (validación) globalmente
+    if (error.response?.status === 422) {
+      const message = error.response?.data?.message || 'Error de validación';
+      
+      // Emitir evento personalizado para mostrar toast
+      const toastEvent = new CustomEvent('show-toast', {
+        detail: { message, type: 'error' }
+      });
+      window.dispatchEvent(toastEvent);
+    }
+    
     // Solo redirigir al login en casos específicos de autenticación
     if (error.response?.status === 401 && error.response?.data?.message?.includes('Unauthenticated')) {
       console.log('Usuario no autenticado, token inválido');

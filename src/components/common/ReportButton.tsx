@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useReports } from '../../hooks/useReports';
+import { useToastContext } from '../../contexts/ToastContext';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 
@@ -16,6 +17,7 @@ export const ReportButton: React.FC<ReportButtonProps> = ({
 }) => {
   const { user } = useAuth();
   const { reportContent, loading } = useReports();
+  const { showSuccess, showError } = useToastContext();
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     motivo: '',
@@ -25,17 +27,24 @@ export const ReportButton: React.FC<ReportButtonProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const success = await reportContent({
-      reportable_type: reportableType,
-      reportable_id: reportableId,
-      motivo: formData.motivo,
-      descripcion: formData.descripcion || undefined
-    });
+    try {
+      const success = await reportContent({
+        reportable_type: reportableType,
+        reportable_id: reportableId,
+        motivo: formData.motivo,
+        descripcion: formData.descripcion || undefined
+      });
 
-    if (success) {
-      setShowModal(false);
-      setFormData({ motivo: '', descripcion: '' });
-      alert('Reporte enviado correctamente. Será revisado por los moderadores.');
+      if (success) {
+        setShowModal(false);
+        setFormData({ motivo: '', descripcion: '' });
+        showSuccess('Reporte enviado correctamente. Será revisado por los moderadores.');
+      }
+    } catch (error: any) {
+      // El interceptor ya maneja errores 422
+      if (error.response?.status !== 422) {
+        showError('Error al enviar el reporte. Inténtalo de nuevo.');
+      }
     }
   };
 

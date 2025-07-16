@@ -1,7 +1,8 @@
 // src/components/common/AnswerCard.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useAnswers } from '../../hooks/useAnswers';
+import { useToastContext } from '../../contexts/ToastContext';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { VoteButtons } from './VoteButtons';
@@ -21,27 +22,44 @@ interface Answer {
 interface AnswerCardProps {
   answer: Answer;
   questionAuthorId?: number; // ID del autor de la pregunta para permitir marcar como mejor
+  questionClosed?: boolean; // Nuevo prop para saber si la pregunta está cerrada
+  onAnswerMarkedAsBest?: (answerId: number) => void; // Callback para actualizar el estado padre
 }
 
 export const AnswerCard: React.FC<AnswerCardProps> = ({ 
   answer, 
-  questionAuthorId 
+  questionAuthorId,
+  questionClosed = false,
+  onAnswerMarkedAsBest
 }) => {
   const { user } = useAuth();
   const { markAsBest, loading } = useAnswers();
+  const { showSuccess, showError } = useToastContext();
+  const [isMarkedAsBest, setIsMarkedAsBest] = useState(answer.es_mejor_respuesta || false);
 
   const handleMarkAsBest = async () => {
     if (!user || user.id !== questionAuthorId) return;
     
-    const result = await markAsBest(answer.id);
-    if (result) {
-      // Aquí podrías actualizar el estado local o recargar la pregunta
-      window.location.reload(); // Solución temporal
+    try {
+      const result = await markAsBest(answer.id);
+      if (result) {
+        setIsMarkedAsBest(true);
+        showSuccess('Respuesta marcada como la mejor. La pregunta ha sido cerrada.');
+        // Notificar al componente padre para actualizar el estado
+        if (onAnswerMarkedAsBest) {
+          onAnswerMarkedAsBest(answer.id);
+        }
+      }
+    } catch (error: any) {
+      // El interceptor ya maneja errores 422
+      if (error.response?.status !== 422) {
+        showError('Error al marcar como mejor respuesta. Inténtalo de nuevo.');
+      }
     }
   };
 
   return (
-    <Card className={`mb-4 ${answer.es_mejor_respuesta ? 'border-green-500 border-2' : ''}`}>
+    <Card className={`mb-4 ${(isMarkedAsBest || answer.es_mejor_respuesta) ? 'border-green-500 border-2 bg-green-50' : ''}`}>
       <div className="flex space-x-4">
         <div className="flex-shrink-0">
           <VoteButtons 
@@ -52,7 +70,7 @@ export const AnswerCard: React.FC<AnswerCardProps> = ({
         </div>
         
         <div className="flex-grow">
-          {answer.es_mejor_respuesta && (
+          {(isMarkedAsBest || answer.es_mejor_respuesta) && (
             <div className="mb-2">
               <span className="bg-green-100 text-green-800 px-2 py-1 text-sm rounded font-medium">
                 ✓ Mejor Respuesta
@@ -71,14 +89,14 @@ export const AnswerCard: React.FC<AnswerCardProps> = ({
             
             <div className="flex space-x-2">
               {/* Solo el autor de la pregunta puede marcar como mejor respuesta */}
-              {user && user.id === questionAuthorId && !answer.es_mejor_respuesta && (
+              {user && user.id === questionAuthorId && !isMarkedAsBest && !answer.es_mejor_respuesta && !questionClosed && (
                 <Button 
                   onClick={handleMarkAsBest}
                   variant="secondary"
                   disabled={loading}
-                  className="text-sm"
+                  className="text-sm hover:bg-green-500 hover:text-white transition-colors"
                 >
-                  {loading ? 'Marcando...' : 'Marcar como mejor'}
+                  {loading ? 'Marcando...' : '🏆 Marcar como mejor'}
                 </Button>
               )}
               
