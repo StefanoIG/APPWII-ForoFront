@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Card } from '../components/ui/Card';
 import { Spinner } from '../components/ui/Spinner';
+import { MainLayout } from '../components/layout/MainLayout';
 
 export const SearchPage: React.FC = () => {
   const { questions, loading, error, fetchQuestions } = useQuestions();
@@ -105,8 +106,9 @@ export const SearchPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <MainLayout>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header con gradiente */}
         <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 mb-8 text-white shadow-2xl">
           <div className="relative z-10">
@@ -325,9 +327,9 @@ export const SearchPage: React.FC = () => {
                 )}
               </>
             )}
-          </div>
+          </div>          </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 };

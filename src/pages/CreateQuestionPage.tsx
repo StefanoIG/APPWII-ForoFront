@@ -13,6 +13,7 @@ export const CreateQuestionPage: React.FC = () => {
   const { createQuestion, loading, error } = useQuestions();
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
   const [formData, setFormData] = useState({
     titulo: '',
     contenido: '',
@@ -24,14 +25,25 @@ export const CreateQuestionPage: React.FC = () => {
     // Cargar categorías y etiquetas disponibles
     const loadData = async () => {
       try {
+        setLoadingData(true);
         const [categoriesRes, tagsRes] = await Promise.all([
           apiClient.get('/public/categories'),
           apiClient.get('/public/tags')
         ]);
-        setCategories(categoriesRes.data);
-        setTags(tagsRes.data);
+        
+        // Asegurar que siempre sean arrays
+        const categoriesData = Array.isArray(categoriesRes.data) ? categoriesRes.data : categoriesRes.data.data || [];
+        const tagsData = Array.isArray(tagsRes.data) ? tagsRes.data : tagsRes.data.data || [];
+        
+        setCategories(categoriesData);
+        setTags(tagsData);
       } catch (error) {
         console.error('Error cargando datos:', error);
+        // Establecer arrays vacíos en caso de error
+        setCategories([]);
+        setTags([]);
+      } finally {
+        setLoadingData(false);
       }
     };
     loadData();
@@ -108,11 +120,17 @@ export const CreateQuestionPage: React.FC = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Selecciona una categoría</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.nombre}
-                  </option>
-                ))}
+                {loadingData ? (
+                  <option value="" disabled>Cargando categorías...</option>
+                ) : categories && categories.length > 0 ? (
+                  categories.map(category => (
+                    <option key={category.id} value={category.id}>
+                      {category.nombre}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>Error al cargar categorías</option>
+                )}
               </select>
             </div>
 
@@ -137,20 +155,26 @@ export const CreateQuestionPage: React.FC = () => {
                 Etiquetas * (selecciona al menos una)
               </label>
               <div className="flex flex-wrap gap-2">
-                {tags.map(tag => (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    onClick={() => handleTagToggle(tag.id)}
-                    className={`px-3 py-1 text-sm rounded-full border transition-colors ${
-                      formData.tags.includes(tag.id)
-                        ? 'bg-blue-100 text-blue-700 border-blue-300'
-                        : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-                    }`}
-                  >
-                    {tag.nombre}
-                  </button>
-                ))}
+                {loadingData ? (
+                  <div className="text-gray-500 text-sm">Cargando etiquetas...</div>
+                ) : tags && tags.length > 0 ? (
+                  tags.map(tag => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => handleTagToggle(tag.id)}
+                      className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+                        formData.tags.includes(tag.id)
+                          ? 'bg-blue-100 text-blue-700 border-blue-300'
+                          : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+                      }`}
+                    >
+                      {tag.nombre}
+                    </button>
+                  ))
+                ) : (
+                  <div className="text-red-500 text-sm">Error al cargar etiquetas. <button onClick={() => window.location.reload()} className="underline">Recargar página</button></div>
+                )}
               </div>
               <div className="text-sm text-gray-500 mt-1">
                 {formData.tags.length} etiqueta(s) seleccionada(s)

@@ -19,11 +19,26 @@ export const useAuth = () => {
 
   const fetchCurrentUser = async () => {
     try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      
       const response = await apiClient.get('/auth/me');
       setUser(response.data.user);
-    } catch (e) {
-      localStorage.removeItem('authToken'); // Token inválido, lo removemos
-      setUser(null);
+    } catch (e: any) {
+      console.error('Error al verificar usuario:', e.response?.status);
+      
+      // Solo eliminar token si es realmente un error de autenticación
+      if (e.response?.status === 401 || e.response?.status === 403) {
+        localStorage.removeItem('authToken');
+        setUser(null);
+      } else {
+        // Para otros errores (500, red, etc.), mantener el estado pero no hacer nada
+        console.log('Error temporal de red, manteniendo estado actual');
+      }
     } finally {
       setLoading(false);
     }
@@ -56,7 +71,14 @@ export const useAuth = () => {
       setUser(user);
       return true;
     } catch (e: any) {
-      setError(e.response?.data?.message || 'Error al registrarse');
+      // Manejar errores de validación del backend
+      if (e.response?.data?.errors) {
+        const backendErrors = e.response.data.errors;
+        const errorMessages = Object.values(backendErrors).flat().join(', ');
+        setError(errorMessages);
+      } else {
+        setError(e.response?.data?.message || 'Error al registrarse');
+      }
       return false;
     } finally {
       setLoading(false);
