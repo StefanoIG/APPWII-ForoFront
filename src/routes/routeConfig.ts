@@ -51,8 +51,14 @@ export const routeConfigs: Record<string, RouteConfig> = {
   // Rutas protegidas
   ask: {
     path: '/ask',
-    title: 'Hacer Pregunta',
-    description: 'Crear nueva pregunta',
+    title: 'Crear Post',
+    description: 'Crear nuevo post',
+    requiresAuth: true,
+  },
+  createPost: {
+    path: '/create-post',
+    title: 'Nuevo Post',
+    description: 'Crear nuevo post con markdown e imágenes',
     requiresAuth: true,
   },
   profile: {

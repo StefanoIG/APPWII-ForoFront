@@ -11,8 +11,17 @@ import { FavoritesPage } from '../pages/FavoritesPage';
 
 export const protectedRoutes = [
   <Route 
-    key="ask" 
+    key="create-post" 
     path="/ask" 
+    element={
+      <ProtectedRoute>
+        <CreateQuestionPage />
+      </ProtectedRoute>
+    } 
+  />,
+  <Route 
+    key="new-post" 
+    path="/create-post" 
     element={
       <ProtectedRoute>
         <CreateQuestionPage />
